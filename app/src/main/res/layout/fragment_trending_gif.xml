@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".feature.mainActivity.trendingGifFragment.TrendingGifFragment">
+
+    <EditText
+        android:id="@+id/edtSearch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@null"
+        android:drawableEnd="@drawable/ic_search"
+        android:ems="10"
+        android:hint="@string/search_gif"
+        android:imeOptions="actionSearch"
+        android:importantForAutofill="no"
+        android:inputType="textPersonName"
+        android:maxLines="1"
+        android:padding="8dp"
+        android:textColor="@color/black"
+        android:textColorHint="@color/colorHint" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rcvGif"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/edtSearch"
+        android:layout_marginTop="8dp"
+        tools:itemCount="5"
+        tools:listitem="@layout/item_gif" />
+
+    <TextView
+        android:id="@+id/txvDataNotFound"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/edtSearch"
+        android:layout_gravity="center"
+        android:background="@color/white"
+        android:gravity="center"
+        android:text="@string/no_data_found"
+        android:textColor="@color/black"
+        android:visibility="gone" />
+</RelativeLayout>

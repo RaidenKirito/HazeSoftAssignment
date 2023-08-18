@@ -1,0 +1,21 @@
+<resources>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+
+    <string name="loading">Loading…</string>
+    <string name="error_no_wifi">No internet</string>
+    <string name="error">Error</string>
+    <string name="error_email_empty">Email is required!</string>
+    <string name="error_password_empty">Password is required!</string>
+    <string name="error_invalid_email">Invalid email!</string>
+
+    <string name="error_no_wifi_description">Please check your internet connection and try again.</string>
+    <string name="session_expired_description">Oops! Your session has expired. Please, login again to continue.</string>
+    <string name="error_default">Something went wrong, Please try again!</string>
+    <string name="search_gif">Search Gif</string>
+    <string name="imageDescription">imageDescription</string>
+    <string name="saving_data">Saving data.....</string>
+    <string name="failed_to_save_data">Unable to save data at the moment. Please try again</string>
+    <string name="removed_successfully">Gif Removed Successfully</string>
+    <string name="no_data_found">No Data Found</string>
+</resources>
