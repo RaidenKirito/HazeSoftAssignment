@@ -63,13 +63,10 @@ class TrendingGifViewModel @Inject constructor(
     }
 
     fun getFavouriteGif() {
-        showLoading(R.string.loading)
         viewModelScope.launch(Dispatchers.IO) {
             trendingGifRepository?.getFavouriteGif()?.onSuccess { gifResponse ->
-                hideLoading()
                 _favouriteGifResponse.postValue(gifResponse)
             }?.onFailure { throwable ->
-                hideLoading()
                 performActionOnException(throwable) {}
             }
         }

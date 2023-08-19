@@ -1,13 +1,12 @@
 package com.example.hazesoftassignment.utils.helper
 
-import android.app.Activity
 import android.app.Dialog
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.Window
+import com.example.hazesoftassignment.databinding.LayoutProgressDialogBinding
 import com.example.hazesoftassignment.utils.extensions.viewGone
 import com.example.hazesoftassignment.utils.extensions.viewVisible
-import com.example.hazesoftassignment.databinding.LayoutProgressDialogBinding
 
 class ProgressDialogHelper(context: Context?) {
 
@@ -15,12 +14,12 @@ class ProgressDialogHelper(context: Context?) {
     private lateinit var binding: LayoutProgressDialogBinding
 
     fun showProgress(message: String?) {
-            try {
-                setMessage(message)
-                dialog?.show()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+        try {
+            setMessage(message)
+            dialog?.show()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     private fun setMessage(message: String?) {
@@ -43,8 +42,16 @@ class ProgressDialogHelper(context: Context?) {
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-            dialog = null
         }
+    }
+
+    fun destroyDialog() {
+        if (dialog == null) {
+            return
+        }
+
+        dialog?.dismiss()
+        dialog = null
     }
 
     companion object {
@@ -53,15 +60,13 @@ class ProgressDialogHelper(context: Context?) {
 
     init {
         this.context = context
-        if (dialog == null) {
-            if (this.context != null) {
-                binding = LayoutProgressDialogBinding.inflate(LayoutInflater.from(context))
-                dialog = Dialog(this.context)
-                dialog?.apply {
-                    requestWindowFeature(Window.FEATURE_NO_TITLE)
-                    setContentView(binding.root)
-                    setCancelable(false)
-                }
+        if (this.context != null) {
+            binding = LayoutProgressDialogBinding.inflate(LayoutInflater.from(context))
+            dialog = Dialog(this.context)
+            dialog?.apply {
+                requestWindowFeature(Window.FEATURE_NO_TITLE)
+                setContentView(binding.root)
+                setCancelable(false)
             }
         }
     }

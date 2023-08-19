@@ -70,9 +70,9 @@ class TrendingGifRepository @Inject constructor(
         }
     }
 
-    suspend fun deleteGifFromFavourite(id: Int?): Resource<Unit> {
+    suspend fun deleteGifFromFavourite(gifId: String?): Resource<Unit> {
         try {
-            appDao?.deleteGifFromFavourite(id).let {
+            appDao?.deleteGifFromFavourite(gifId).let {
                 return Resource.Success(it)
             }
         } catch (e: Exception) {

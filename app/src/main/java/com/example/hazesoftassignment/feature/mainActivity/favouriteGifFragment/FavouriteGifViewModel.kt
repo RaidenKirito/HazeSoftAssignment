@@ -38,10 +38,10 @@ class FavouriteGifViewModel @Inject constructor(
         }
     }
 
-    fun deleteGifFromFavourite(id: Int?) {
+    fun deleteGifFromFavourite(gifId: String?) {
         showLoading(R.string.saving_data)
         viewModelScope.launch(Dispatchers.IO) {
-            trendingGifRepository?.deleteGifFromFavourite(id)?.onSuccess {
+            trendingGifRepository?.deleteGifFromFavourite(gifId)?.onSuccess {
                 hideLoading()
                 _onDeleteGifFromFavouriteResponse.postValue(it)
             }?.onFailure {

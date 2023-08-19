@@ -12,7 +12,7 @@ import com.example.hazesoftassignment.feature.shared.viewHolder.LoadingViewHolde
 import com.example.hazesoftassignment.utils.constants.Constants
 
 class GifAdapter(
-    private val gifList: List<GifResponse>?,
+    private val gifList: MutableList<GifResponse>?,
     private val onGifResponseClicked: (position: Int?) -> Unit,
     var onLastIndexReached: () -> Unit
 ) : BaseAdapter<BaseViewHolder>() {

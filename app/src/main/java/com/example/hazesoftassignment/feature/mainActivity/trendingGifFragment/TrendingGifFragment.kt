@@ -5,7 +5,6 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.TextView
 import androidx.fragment.app.viewModels
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.hazesoftassignment.databinding.FragmentTrendingGifBinding
 import com.example.hazesoftassignment.feature.mainActivity.MainActivity
 import com.example.hazesoftassignment.feature.shared.adapter.GifAdapter
@@ -16,6 +15,7 @@ import com.example.hazesoftassignment.utils.constants.Constants
 import com.example.hazesoftassignment.utils.extensions.hideSoftKeyboard
 import com.example.hazesoftassignment.utils.extensions.viewGone
 import com.example.hazesoftassignment.utils.extensions.viewVisible
+import com.example.hazesoftassignment.utils.util.NetworkUtils
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
 
@@ -23,10 +23,10 @@ import java.util.*
 class TrendingGifFragment : BaseFragment<FragmentTrendingGifBinding, TrendingGifViewModel>() {
     private val trendingGifViewModel: TrendingGifViewModel by viewModels()
     private var gifAdapter: GifAdapter? = null
-    private var trendingGifList: MutableList<GifResponse>? = arrayListOf()
-    private var favouriteGifList: MutableList<GifResponse>? = arrayListOf()
-    private var searchedGifList: MutableList<GifResponse>? = arrayListOf()
-    var gifList: MutableList<GifResponse>? = arrayListOf()
+    private var trendingGifList: MutableList<GifResponse>? = mutableListOf()
+    private var favouriteGifList: MutableList<GifResponse>? = mutableListOf()
+    private var searchedGifList: MutableList<GifResponse>? = mutableListOf()
+    var gifList: MutableList<GifResponse>? = mutableListOf()
     private var limit: Int? = 10
     private var offset: Int = 0
 
@@ -41,14 +41,18 @@ class TrendingGifFragment : BaseFragment<FragmentTrendingGifBinding, TrendingGif
 
     private fun setUp() {
         getFavouriteGif()
-        getTrendingGif(limit, offset)
         initAdapter()
         initListeners()
         initObservers()
     }
 
     private fun getTrendingGif(limit: Int?, offset: Int?) {
-        trendingGifViewModel.getTrendingGif(ApiConstants.apiKey, limit, offset)
+        if (NetworkUtils.isNetworkAvailable(context)) {
+            binding?.txvInternetNotFound?.viewGone()
+            trendingGifViewModel.getTrendingGif(ApiConstants.apiKey, limit, offset)
+        } else {
+            binding?.txvInternetNotFound?.viewVisible()
+        }
     }
 
     private fun getFavouriteGif() {
@@ -56,7 +60,12 @@ class TrendingGifFragment : BaseFragment<FragmentTrendingGifBinding, TrendingGif
     }
 
     private fun getSearchedGif(searchKey: String?, limit: Int?, offset: Int?) {
-        trendingGifViewModel.getSearchedGif(ApiConstants.apiKey, searchKey, limit, offset)
+        if (NetworkUtils.isNetworkAvailable(context)) {
+            binding?.txvInternetNotFound?.viewGone()
+            trendingGifViewModel.getSearchedGif(ApiConstants.apiKey, searchKey, limit, offset)
+        } else {
+            binding?.txvInternetNotFound?.viewVisible()
+        }
     }
 
     private fun initAdapter() {
@@ -66,18 +75,20 @@ class TrendingGifFragment : BaseFragment<FragmentTrendingGifBinding, TrendingGif
                 trendingGifViewModel.insertGifToFavourite(gifList?.get(it ?: 0))
             } else {
                 gifList?.get(it ?: 0)?.isFavourite = false
-                (requireActivity() as MainActivity).favouriteGifFragment?.deleteGifFromDatabase(it)
+                (activity as MainActivity?)?.favouriteGifFragment?.deleteGifFromDatabase(
+                    gifList?.get(
+                        it ?: 0
+                    )?.id
+                )
             }
         }, {
-            offset++
             getMoreGifData(binding?.edtSearch?.text.toString().trim().lowercase(Locale.ROOT))
         })
-
-        binding?.rcvGif?.layoutManager = LinearLayoutManager(requireContext())
         binding?.rcvGif?.adapter = gifAdapter
     }
 
     private fun getMoreGifData(searchKey: String?) {
+        offset++
         if (searchKey.isNullOrEmpty()) {
             getTrendingGif(limit, offset)
         } else {
@@ -86,9 +97,16 @@ class TrendingGifFragment : BaseFragment<FragmentTrendingGifBinding, TrendingGif
     }
 
     private fun initListeners() {
+        binding?.swpRefresh?.setOnRefreshListener {
+            view?.let { requireContext().hideSoftKeyboard(it) }
+            binding?.swpRefresh?.isRefreshing = false
+            binding?.edtSearch?.setText("")
+            getFavouriteGif()
+        }
+
         binding?.edtSearch?.setOnEditorActionListener(TextView.OnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                callListApi()
+                getFavouriteGif()
                 view?.let { requireContext().hideSoftKeyboard(it) }
                 return@OnEditorActionListener true
             }
@@ -113,40 +131,42 @@ class TrendingGifFragment : BaseFragment<FragmentTrendingGifBinding, TrendingGif
 
     private fun initObservers() {
         trendingGifViewModel.trendingGifResponse.observe(viewLifecycleOwner) { trendingGifResponse ->
-            if (!trendingGifResponse.isNullOrEmpty()) {
-                binding?.txvDataNotFound.viewGone()
-                gifList?.clear()
-                trendingGifList?.addAll(trendingGifResponse as MutableList)
-                gifList?.addAll(trendingGifList as MutableList)
-                addOrRemoveLoadingForAdapter()
-            } else {
-                binding?.txvDataNotFound.viewVisible()
-            }
-            gifAdapter?.notifyDataSetChanged()
+            populateList(trendingGifResponse, trendingGifList)
         }
 
         trendingGifViewModel.searchedGifResponse.observe(viewLifecycleOwner) { searchedResponse ->
-            if (!searchedResponse.isNullOrEmpty()) {
-                binding?.txvDataNotFound.viewGone()
-                gifList?.clear()
-                searchedGifList?.addAll(searchedResponse as MutableList)
-                gifList?.addAll(searchedGifList as MutableList)
-                addOrRemoveLoadingForAdapter()
-            } else {
-                binding?.txvDataNotFound.viewVisible()
-            }
-            gifAdapter?.notifyDataSetChanged()
+            populateList(searchedResponse, searchedGifList)
         }
 
         trendingGifViewModel.favouriteGifResponse.observe(viewLifecycleOwner) {
             favouriteGifList?.clear()
-            favouriteGifList?.addAll(it as MutableList)
+            favouriteGifList?.addAll(it ?: emptyList())
+            callListApi()
         }
 
         trendingGifViewModel.onInsertGifToFavouriteResponse.observe(viewLifecycleOwner) {
-            (requireActivity() as MainActivity).favouriteGifFragment?.getFavouriteGif()
+            (activity as MainActivity?)?.favouriteGifFragment?.getFavouriteGif()
             gifAdapter?.notifyDataSetChanged()
         }
+    }
+
+    private fun populateList(
+        apiGifResponse: List<GifResponse>?, apiGifList: MutableList<GifResponse>?
+    ) {
+        if (!apiGifResponse.isNullOrEmpty()) {
+            binding?.txvDataNotFound.viewGone()
+            gifList?.clear()
+            apiGifList?.addAll(apiGifResponse)
+            apiGifList?.forEach { trendingListResponse ->
+                trendingListResponse.isFavourite =
+                    favouriteGifList?.any { it.id == trendingListResponse.id } == true
+            }
+            gifList?.addAll(apiGifList ?: emptyList())
+            addOrRemoveLoadingForAdapter()
+        } else {
+            binding?.txvDataNotFound.viewVisible()
+        }
+        gifAdapter?.notifyDataSetChanged()
     }
 
     private fun addOrRemoveLoadingForAdapter() {

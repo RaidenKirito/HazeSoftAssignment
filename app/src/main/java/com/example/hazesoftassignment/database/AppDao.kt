@@ -15,6 +15,6 @@ interface AppDao {
     @Insert
     suspend fun insertGifToFavourite(gifResponse: GifResponse?)
 
-    @Query("DELETE FROM ${DbConstants.tbFavouriteGif} WHERE roomId == :id ")
-    suspend fun deleteGifFromFavourite(id: Int?)
+    @Query("DELETE FROM ${DbConstants.tbFavouriteGif} WHERE id == :gifId ")
+    suspend fun deleteGifFromFavourite(gifId: String?)
 }
