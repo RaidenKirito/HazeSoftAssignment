@@ -1,7 +1,6 @@
 package com.example.hazesoftassignment.feature.mainActivity.trendingGifFragment
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.TextView
@@ -25,9 +24,9 @@ class TrendingGifFragment : BaseFragment<FragmentTrendingGifBinding, TrendingGif
     private val trendingGifViewModel: TrendingGifViewModel by viewModels()
     private var gifAdapter: GifAdapter? = null
     private var trendingGifList: MutableList<GifResponse>? = arrayListOf()
-    private var favouriteGifList: MutableList<GifResponse>? = null
+    private var favouriteGifList: MutableList<GifResponse>? = arrayListOf()
     private var searchedGifList: MutableList<GifResponse>? = arrayListOf()
-    private var gifList: MutableList<GifResponse>? = arrayListOf()
+    var gifList: MutableList<GifResponse>? = arrayListOf()
     private var limit: Int? = 10
     private var offset: Int = 0
 
@@ -41,18 +40,18 @@ class TrendingGifFragment : BaseFragment<FragmentTrendingGifBinding, TrendingGif
     }
 
     private fun setUp() {
+        getFavouriteGif()
+        getTrendingGif(limit, offset)
         initAdapter()
         initListeners()
         initObservers()
-        getFavouriteGif()
     }
 
     private fun getTrendingGif(limit: Int?, offset: Int?) {
         trendingGifViewModel.getTrendingGif(ApiConstants.apiKey, limit, offset)
     }
 
-    fun getFavouriteGif() {
-        Log.d("FavouriteListFromTrending", favouriteGifList?.size.toString())
+    private fun getFavouriteGif() {
         trendingGifViewModel.getFavouriteGif()
     }
 
@@ -67,7 +66,7 @@ class TrendingGifFragment : BaseFragment<FragmentTrendingGifBinding, TrendingGif
                 trendingGifViewModel.insertGifToFavourite(gifList?.get(it ?: 0))
             } else {
                 gifList?.get(it ?: 0)?.isFavourite = false
-                trendingGifViewModel.deleteGifFromFavourite(gifList?.get(it ?: 0)?.roomId)
+                (requireActivity() as MainActivity).favouriteGifFragment?.deleteGifFromDatabase(it)
             }
         }, {
             offset++
@@ -119,11 +118,6 @@ class TrendingGifFragment : BaseFragment<FragmentTrendingGifBinding, TrendingGif
                 gifList?.clear()
                 trendingGifList?.addAll(trendingGifResponse as MutableList)
                 gifList?.addAll(trendingGifList as MutableList)
-                gifList?.forEach { gitListResponse ->
-                    favouriteGifList?.forEach {
-                        gitListResponse.isFavourite = gitListResponse.id == it.id
-                    }
-                }
                 addOrRemoveLoadingForAdapter()
             } else {
                 binding?.txvDataNotFound.viewVisible()
@@ -137,11 +131,6 @@ class TrendingGifFragment : BaseFragment<FragmentTrendingGifBinding, TrendingGif
                 gifList?.clear()
                 searchedGifList?.addAll(searchedResponse as MutableList)
                 gifList?.addAll(searchedGifList as MutableList)
-                gifList?.forEach { gitListResponse ->
-                    favouriteGifList?.forEach {
-                        gitListResponse.isFavourite = gitListResponse.id == it.id
-                    }
-                }
                 addOrRemoveLoadingForAdapter()
             } else {
                 binding?.txvDataNotFound.viewVisible()
@@ -149,24 +138,13 @@ class TrendingGifFragment : BaseFragment<FragmentTrendingGifBinding, TrendingGif
             gifAdapter?.notifyDataSetChanged()
         }
 
-        trendingGifViewModel.onInsertGifToFavouriteResponse.observe(viewLifecycleOwner) {
-            getFavouriteGif()
-            (requireActivity() as MainActivity).favouriteGifFragment?.getFavouriteList()
-            gifAdapter?.notifyDataSetChanged()
-        }
-
         trendingGifViewModel.favouriteGifResponse.observe(viewLifecycleOwner) {
-            Log.d("FavouriteListFromTrendingFavouriteApi", favouriteGifList?.size.toString())
-            if (!it.isNullOrEmpty()) {
-                favouriteGifList = mutableListOf()
-                favouriteGifList?.clear()
-                favouriteGifList?.addAll(it as MutableList)
-            }
-            getTrendingGif(limit, offset)
+            favouriteGifList?.clear()
+            favouriteGifList?.addAll(it as MutableList)
         }
 
-        trendingGifViewModel.onDeleteGifFromFavouriteResponse.observe(viewLifecycleOwner) {
-            getFavouriteGif()
+        trendingGifViewModel.onInsertGifToFavouriteResponse.observe(viewLifecycleOwner) {
+            (requireActivity() as MainActivity).favouriteGifFragment?.getFavouriteGif()
             gifAdapter?.notifyDataSetChanged()
         }
     }

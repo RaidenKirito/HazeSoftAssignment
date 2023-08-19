@@ -8,7 +8,7 @@ import com.example.hazesoftassignment.feature.shared.model.response.gifResponse.
 import com.example.hazesoftassignment.feature.shared.viewHolder.GifViewHolder
 
 class FavouriteGifAdapter(
-    private val gifList: MutableList<GifResponse>?,
+    private val gifList: List<GifResponse>?,
     private val onGifResponseClicked: (position: Int?) -> Unit
 ) : BaseAdapter<GifViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = GifViewHolder(

@@ -1,7 +1,6 @@
 package com.example.hazesoftassignment.feature.mainActivity.favouriteGifFragment
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -18,7 +17,7 @@ import dagger.hilt.android.AndroidEntryPoint
 class FavouriteGifFragment : BaseFragment<FragmentFavouriteGifBinding, FavouriteGifViewModel>() {
     private val favouriteGifViewModel: FavouriteGifViewModel by viewModels()
     private var favouriteGifAdapter: FavouriteGifAdapter? = null
-    private var favouriteGifList: MutableList<GifResponse>? = null
+    private var favouriteGifList: MutableList<GifResponse>? = arrayListOf()
 
     override fun getViewModel() = favouriteGifViewModel
 
@@ -31,34 +30,42 @@ class FavouriteGifFragment : BaseFragment<FragmentFavouriteGifBinding, Favourite
 
     private fun setUp() {
         initAdapter()
+        getFavouriteGif()
         initObservers()
-        getFavouriteList()
-    }
-
-    fun getFavouriteList() {
-        Log.d("FavouriteListFromFunctionStart", favouriteGifList?.size.toString())
-        favouriteGifViewModel.getFavouriteGif()
     }
 
     private fun initAdapter() {
-        binding?.rcvGif?.layoutManager = LinearLayoutManager(requireContext())
         favouriteGifAdapter = FavouriteGifAdapter(favouriteGifList) {
+            deleteGifFromDatabase(it)
+        }
+
+        binding?.rcvGif?.layoutManager = LinearLayoutManager(requireContext())
+        binding?.rcvGif?.adapter = favouriteGifAdapter
+    }
+
+    fun deleteGifFromDatabase(position: Int?) {
+        (requireActivity() as MainActivity).trendingGifFragment?.gifList?.get(
+            position ?: 0
+        )?.isFavourite = false
+        if (favouriteGifList.isNullOrEmpty()) {
+            showMessageDialog("List already empty")
+        } else {
             favouriteGifViewModel.deleteGifFromFavourite(
                 favouriteGifList?.get(
-                    it ?: 0
+                    position ?: 0
                 )?.roomId
             )
         }
+    }
 
-        binding?.rcvGif?.adapter = favouriteGifAdapter
+    fun getFavouriteGif() {
+        favouriteGifViewModel.getFavouriteGif()
     }
 
     private fun initObservers() {
         favouriteGifViewModel.favouriteGifResponse.observe(viewLifecycleOwner) {
-            Log.d("FavouriteListFromFunctionEnd", it?.size.toString())
             if (!it.isNullOrEmpty()) {
                 binding?.txvDataNotFound.viewGone()
-                favouriteGifList = mutableListOf()
                 favouriteGifList?.clear()
                 favouriteGifList?.addAll(it as MutableList)
             } else {
@@ -68,8 +75,8 @@ class FavouriteGifFragment : BaseFragment<FragmentFavouriteGifBinding, Favourite
         }
 
         favouriteGifViewModel.onDeleteGifFromFavouriteResponse.observe(viewLifecycleOwner) {
-            getFavouriteList()
-            (requireActivity() as MainActivity).trendingGifFragment?.getFavouriteGif()
+            (requireActivity() as MainActivity).trendingGifFragment?.callListApi()
+            getFavouriteGif()
         }
     }
 }

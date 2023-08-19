@@ -31,9 +31,6 @@ class TrendingGifViewModel @Inject constructor(
     private val _onInsertGifToFavouriteResponse = SingleLiveEvent<Unit>()
     val onInsertGifToFavouriteResponse: LiveData<Unit> get() = _onInsertGifToFavouriteResponse
 
-    private val _onDeleteGifFromFavouriteResponse = SingleLiveEvent<Unit>()
-    val onDeleteGifFromFavouriteResponse: LiveData<Unit> get() = _onDeleteGifFromFavouriteResponse
-
     fun getTrendingGif(
         apiKey: String?, limit: Int?, offset: Int?
     ) {
@@ -84,19 +81,6 @@ class TrendingGifViewModel @Inject constructor(
             trendingGifRepository?.insertGifToFavourite(gifResponse)?.onSuccess {
                 hideLoading()
                 _onInsertGifToFavouriteResponse.postValue(it)
-            }?.onFailure {
-                hideLoading()
-                handleError(R.string.failed_to_save_data) {}
-            }
-        }
-    }
-
-    fun deleteGifFromFavourite(roomId: Int?) {
-        showLoading(R.string.saving_data)
-        viewModelScope.launch(Dispatchers.IO) {
-            trendingGifRepository?.deleteGifFromFavourite(roomId)?.onSuccess {
-                hideLoading()
-                _onDeleteGifFromFavouriteResponse.postValue(it)
             }?.onFailure {
                 hideLoading()
                 handleError(R.string.failed_to_save_data) {}
